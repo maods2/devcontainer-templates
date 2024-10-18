@@ -1,0 +1,31 @@
+{
+    "name": "my-container",
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": "../",
+        "args": {
+            "MY_ARG": "my-value"
+        }
+    },
+    "remoteEnv": {
+        "MY_ENV": 1234567890,
+        "MY_OTHER_CONTAINER_ENV": 1,
+        "GOOGLE_APPLICATIONS_CREDENTIALS": "tmp/keys/application_default_credentials.json"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.vscode-pylance",
+                "ms-python.debugpy",
+                "ms-python.python",
+                "donjayamanne.python-extension-pack"
+            ]
+        }
+    },
+    "mounts": [
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/user/.ssh,type=bind,consistency=cached"
+    ],
+    "features": {
+        "ghcr.io/devcontainers/features/git:1":{}
+    }
+}

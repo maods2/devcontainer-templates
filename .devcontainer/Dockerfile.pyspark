@@ -1,0 +1,42 @@
+ARG IMAGE_VARIANT=slim-buster
+ARG OPENJDK_VERSION=11.0.11-jre
+ARG PYTHON_VERSION=3.9.8
+
+FROM python:${PYTHON_VERSION}-${IMAGE_VARIANT} AS py3
+FROM openjdk:${OPENJDK_VERSION}-${IMAGE_VARIANT}
+
+COPY --from=py3 / /
+
+
+
+ARG PYSPARK_VERSION=3.2.0
+
+RUN groupadd -g 1000 appuser
+RUN useradd -u 1000 -g appuser -d /home/appuser -m appuser
+
+WORKDIR /app
+
+RUN apt-get update && apt-get --no-install-recommends install -y build-essential=12.6 libxml2=2.9.4+dfsg1-7+deb10u6
+RUN pip --no-cache-dir install cython==3.0.11 pytest==8.3.3 coverage==7.6.3 pyspark_test==0.2.0 dummy_spark==0.0.1 IPython==8.18.1 pytest-cov==5.0.0
+
+RUN pip --no-cache-dir install pyspark==${PYSPARK_VERSION}
+
+RUN pip --no-cache-dir install safety==3.2.8 pytest==8.3.3 pytest-cov==5.0.0 blue==0.9.1 isort==5.13.2 taskipy==1.2.1 ipykernel==6.29.5 matplotlib==3.9.2 openpyxl==3.1.5
+
+RUN apt-get update && apt-get --no-install-recommends install -y zip=3.0-11+b1
+
+ 
+COPY ./requirements.txt ./requirements.txt
+RUN  pip --no-cache-dir install -r requirements.txt
+
+
+# (Optional) Add extra jars.
+ENV SPARK_EXTRA_JARS_DIR=/opt/spark/jars/
+ENV SPARK_CLASSPATH=/opt/spark/jars/
+ENV SPARK_EXTRA_CLASSPATH='/opt/spark/jars/*'
+RUN mkdir -p "${SPARK_EXTRA_JARS_DIR}"
+
+# Copy over jar files needed
+COPY ./.devcontainer/spark-3.2-bigquery-0.40.0.jar "${SPARK_EXTRA_JARS_DIR}"
+
+USER appuser
